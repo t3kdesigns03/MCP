@@ -1,13 +1,13 @@
-# Guided Walkthroughs (Skills-style)
+# Build your first topology (canvas walkthrough)
 
-## Build Your First Topology
+1. Open the game (`python -m http.server 8068` → http://localhost:8068/visual/).
+2. Drag a **PC** from the palette onto the grid (on a phone, tap PC, then tap the grid).
+3. Drag a **SWITCH** onto the grid.
+4. Cable them: drag from the switch's pink port dot onto the PC, or turn on **CABLE**
+   and drag device to device. The terminal echoes `lab.topology.connect`.
+5. In the terminal, run `nodes` to confirm. With the bridge on (see 05-client.md),
+   `lab_state/state.json` and `lab.topology.get` show the same topology.
+6. Double-click the switch, then **+ Monitoring**, to attach a simulated integration.
+7. `verify alert SW-01`: a test trap shows up in **SYSTEMS › MONITORING**.
 
-1. Open the visual canvas.
-2. Add a PC node (classic icon).
-3. Add a Switch node.
-4. Connect them.
-5. In the terminal, run `nodes` to confirm.
-6. Attach a simulated integration (e.g. monitoring) to the switch.
-7. Call the MCP tool to verify the alert surface.
-
-Tips appear at each step. The user constructs the pieces; the guides supply judgment and sequence.
+Tips appear at each step. You construct the pieces; the guides supply the sequence and the judgment.

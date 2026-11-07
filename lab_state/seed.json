@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "rev": 0,
+  "updated_at": null,
+  "scenario": {
+    "org": "Neon Harbor Freight (FICTIONAL)",
+    "domain": "neonharbor.example",
+    "notice": "Every company, person, network, address and key in this lab is fictional. Addresses use private 10.67.0.0/16 space and reserved .example domains."
+  },
+  "nodes": [],
+  "edges": [],
+  "counters": {
+    "pc": 0, "switch": 0, "router": 0, "server": 0, "firewall": 0, "cloud": 0,
+    "msg": 1004, "alert": 5004, "case": 1003, "event": 0
+  },
+  "integrations": {
+    "email": {
+      "mailbox": "noc@neonharbor.example",
+      "messages": [
+        {"id": "msg-1001", "folder": "inbox", "from": "dispatch@neonharbor.example", "to": "noc@neonharbor.example", "subject": "Dockside scanners can't reach the WMS", "body": "Handheld scanners at Branch-Dockside dropped off around 06:10. Forklifts are idle. Can you look?", "at": "2026-11-07T06:14:00Z", "read": false},
+        {"id": "msg-1002", "folder": "inbox", "from": "facilities@neonharbor.example", "to": "noc@neonharbor.example", "subject": "Power work at Rail Yard Saturday", "body": "Heads-up: the Rail Yard cabinet loses utility power Saturday 02:00-04:00. UPS should carry the switch.", "at": "2026-11-06T17:40:00Z", "read": true},
+        {"id": "msg-1003", "folder": "inbox", "from": "helpdesk@neonharbor.example", "to": "noc@neonharbor.example", "subject": "New label printer for HQ shipping desk", "body": "Shipping is unboxing a new label printer today. It needs an address on the HQ users VLAN.", "at": "2026-11-07T08:02:00Z", "read": false},
+        {"id": "msg-1004", "folder": "sent", "from": "noc@neonharbor.example", "to": "dispatch@neonharbor.example", "subject": "RE: Uptown kiosk reboot", "body": "Uptown kiosks are back after the MX reboot. Closing this out.", "at": "2026-11-05T15:21:00Z", "read": true}
+      ]
+    },
+    "meraki": {
+      "org": {"id": "FAKE-ORG-0067", "name": "Neon Harbor Freight (FAKE ORG)"},
+      "networks": [
+        {"id": "N_FAKE_HQ", "name": "HQ-Harbor", "site": "HQ", "timezone": "America/New_York", "tags": ["hq"]},
+        {"id": "N_FAKE_DOCK", "name": "Branch-Dockside", "site": "Dockside", "timezone": "America/New_York", "tags": ["branch", "warehouse"]},
+        {"id": "N_FAKE_UPTOWN", "name": "Branch-Uptown", "site": "Uptown", "timezone": "America/New_York", "tags": ["branch", "retail"]},
+        {"id": "N_FAKE_YARD", "name": "Branch-RailYard", "site": "RailYard", "timezone": "America/New_York", "tags": ["branch", "yard"]}
+      ],
+      "devices": [
+        {"serial": "Q2FK-DOCK-MX01", "name": "DOCK-MX", "model": "MX68", "network_id": "N_FAKE_DOCK", "status": "offline", "lan_ip": "10.67.20.1", "last_seen": "2026-11-07T06:09:00Z", "config": {"access_vlan": 20, "uplink_enabled": true, "notes": ""}},
+        {"serial": "Q2FK-DOCK-MS01", "name": "DOCK-MS", "model": "MS120-24P", "network_id": "N_FAKE_DOCK", "status": "offline", "lan_ip": "10.67.20.2", "last_seen": "2026-11-07T06:09:00Z", "config": {"access_vlan": 20, "uplink_enabled": true, "notes": ""}},
+        {"serial": "Q2FK-UPTN-MX01", "name": "UPTOWN-MX", "model": "MX67", "network_id": "N_FAKE_UPTOWN", "status": "online", "lan_ip": "10.67.30.1", "last_seen": "2026-11-07T08:30:00Z", "config": {"access_vlan": 30, "uplink_enabled": true, "notes": ""}},
+        {"serial": "Q2FK-UPTN-MR01", "name": "UPTOWN-AP1", "model": "MR36", "network_id": "N_FAKE_UPTOWN", "status": "online", "lan_ip": "10.67.30.20", "last_seen": "2026-11-07T08:30:00Z", "config": {"access_vlan": 30, "uplink_enabled": true, "notes": ""}},
+        {"serial": "Q2FK-YARD-MX01", "name": "YARD-MX", "model": "MX68", "network_id": "N_FAKE_YARD", "status": "online", "lan_ip": "10.67.40.1", "last_seen": "2026-11-07T08:30:00Z", "config": {"access_vlan": 40, "uplink_enabled": true, "notes": ""}},
+        {"serial": "Q2FK-YARD-MS01", "name": "YARD-MS", "model": "MS120-8", "network_id": "N_FAKE_YARD", "status": "alerting", "lan_ip": "10.67.40.2", "last_seen": "2026-11-07T08:29:00Z", "config": {"access_vlan": 40, "uplink_enabled": true, "notes": ""}}
+      ]
+    },
+    "monitoring": {
+      "alerts": [
+        {"id": "AL-5001", "severity": "critical", "source": "DOCK-MX", "site": "Dockside", "message": "Device unreachable (ICMP + SNMP) for 140 min", "status": "open", "at": "2026-11-07T06:12:00Z"},
+        {"id": "AL-5002", "severity": "critical", "source": "DOCK-MS", "site": "Dockside", "message": "Device unreachable (upstream MX down)", "status": "open", "at": "2026-11-07T06:12:00Z"},
+        {"id": "AL-5003", "severity": "warning", "source": "YARD-MS", "site": "RailYard", "message": "Port 7 CRC errors rising (412 in 15 min)", "status": "open", "at": "2026-11-07T07:55:00Z"},
+        {"id": "AL-5004", "severity": "info", "source": "UPTOWN-MX", "site": "Uptown", "message": "Rebooted by admin; back online", "status": "resolved", "at": "2026-11-05T15:02:00Z"}
+      ]
+    },
+    "salesforce": {
+      "accounts": [
+        {"Id": "001FAKE0000DOCK", "Name": "Dockside Terminal Ops (FAKE)", "Site": "Dockside", "Tier": "Gold"},
+        {"Id": "001FAKE000UPTWN", "Name": "Uptown Retail Kiosks (FAKE)", "Site": "Uptown", "Tier": "Silver"},
+        {"Id": "001FAKE0000YARD", "Name": "Rail Yard Logistics (FAKE)", "Site": "RailYard", "Tier": "Gold"}
+      ],
+      "cases": [
+        {"Id": "500FAKE00001001", "CaseNumber": "00001001", "Subject": "Uptown kiosk outage", "Status": "Closed", "Priority": "Medium", "AccountId": "001FAKE000UPTWN", "Device": "UPTOWN-MX", "Description": "Kiosks offline; MX rebooted.", "CreatedDate": "2026-11-05T14:40:00Z"},
+        {"Id": "500FAKE00001002", "CaseNumber": "00001002", "Subject": "Rail Yard switch port errors", "Status": "Open", "Priority": "Low", "AccountId": "001FAKE0000YARD", "Device": "YARD-MS", "Description": "CRC errors on port 7. Suspect cable.", "CreatedDate": "2026-11-07T08:00:00Z"},
+        {"Id": "500FAKE00001003", "CaseNumber": "00001003", "Subject": "Badge reader firmware", "Status": "Open", "Priority": "Low", "AccountId": "001FAKE0000DOCK", "Device": "", "Description": "Vendor firmware update scheduled.", "CreatedDate": "2026-11-03T10:00:00Z"}
+      ]
+    },
+    "ipam": {
+      "subnets": [
+        {"id": "sn-hq-mgmt", "cidr": "10.67.1.0/24", "site": "HQ", "vlan": 1, "description": "HQ network management", "gateway": "10.67.1.1", "allocations": [
+          {"ip": "10.67.1.1", "hostname": "hq-gw", "kind": "gateway"}
+        ]},
+        {"id": "sn-hq-users", "cidr": "10.67.10.0/24", "site": "HQ", "vlan": 10, "description": "HQ users + printers", "gateway": "10.67.10.1", "allocations": [
+          {"ip": "10.67.10.1", "hostname": "hq-users-gw", "kind": "gateway"},
+          {"ip": "10.67.10.10", "hostname": "ship-desk-pc", "kind": "host"},
+          {"ip": "10.67.10.11", "hostname": "ship-desk-pc2", "kind": "host"}
+        ]},
+        {"id": "sn-dock", "cidr": "10.67.20.0/24", "site": "Dockside", "vlan": 20, "description": "Dockside scanners + WMS", "gateway": "10.67.20.1", "allocations": [
+          {"ip": "10.67.20.1", "hostname": "dock-mx", "kind": "gateway"},
+          {"ip": "10.67.20.2", "hostname": "dock-ms", "kind": "infra"}
+        ]},
+        {"id": "sn-yard", "cidr": "10.67.40.0/28", "site": "RailYard", "vlan": 40, "description": "Rail Yard cabinet (small)", "gateway": "10.67.40.1", "allocations": [
+          {"ip": "10.67.40.1", "hostname": "yard-mx", "kind": "gateway"},
+          {"ip": "10.67.40.2", "hostname": "yard-ms", "kind": "infra"}
+        ]}
+      ]
+    }
+  },
+  "verification": {
+    "ping": {"status": "pending"},
+    "alert": {"status": "pending"},
+    "case": {"status": "pending"},
+    "allocate": {"status": "pending"},
+    "config": {"status": "pending"}
+  },
+  "events": []
+}

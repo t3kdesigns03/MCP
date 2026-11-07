@@ -1,118 +1,54 @@
-# CLIDK-style Lab — V1 Build Notes
+# Agent0067 — V1 build notes
 
-Hackers-inspired visual lab with a modern guided experience, classic device icons, and an MCP-ready execution layer. Static HTML/JS skeleton ready for Netlify.
+Hackers-style neon lab, a modern guided flow, classic Win98 device icons, and a real
+FastMCP execution layer in front of five simulated systems. The front end is static
+(Netlify-ready). The MCP server is local Python.
 
-## Goal (V1)
+## V1 status
+| Area | State |
+|---|---|
+| Skeleton TDZ bug (`resize()` → `draw()` before `let nodes`) | **fixed**: state loads first, then `canvas.init()` sizes and draws |
+| Visual | canvas with real icons for all 6 device types, drag-place, port-drag cabling, CABLE mode, move, pan/zoom/pinch, double-click/double-tap inspect, CRT scanlines toggle |
+| Experience | 6 sequential phases, graded objectives, hints, procedure + judgment tips, briefings that say what carried over, debriefs, Free Play |
+| Terminal | CLiDK-style console: `?`/`help`, TAB, history, device tabs with `>` `#` `(config)#` `(config-if)#`, simulated python/pip/venv/mcp/fastmcp/git/netlify |
+| Control plane | `mcp_server/server.py`: real FastMCP 4 server, 17 tools, stdio + streamable HTTP, keys from env/.env, writes behind `confirm=true` |
+| Simulated systems | Email, Meraki, Monitoring, Salesforce, IPAM, each with a dashboard panel, an API-key settings page and seeded fake data |
+| Verification | ping, alert, case, allocation, config push, each pass/fail in `lab_state.verification` and on the VERIFY board |
+| Deploy | **not done**: `netlify.toml` is ready; nothing deployed |
 
-User builds every part of the lab themselves:
-- Place classic-icon nodes on a retro arcade canvas
-- Connect them
-- Attach simulated external systems
-- Use a kernel-style terminal with full package availability
-- Verify via guided walkthroughs + MCP tools
-
-Not a full Windows 98 environment — only the device icons. Experience is modern (walkthroughs, tips, progressive disclosure) with a Hackers movie visual layer (neon, dark, CRT-adjacent).
-
-## Simulated Execution Targets
-
-All fake but realistic. Exposed via MCP tools:
-
-- Email
-- Meraki dashboard
-- Monitoring platform (Entuity / SolarWinds style)
-- Salesforce
-- IPAM
-
-## Architecture (V1)
-
+## Architecture
 ```text
-visual/          # Canvas + node rendering (classic icons)
-terminal/        # Kernel console (help?, packages, ansible-galaxy)
-mcp_server/      # FastMCP (or equivalent) tool surface
-lab_state/       # Topology + integration state
-guides/          # Walkthrough steps (Skills-style procedure + judgment)
+visual/js/tools.js     17 tools in JS (browser kernel), mirror of mcp_server/lab.py
+visual/js/state.js     lab_state + progress (localStorage), optional bridge to the local server
+visual/js/canvas.js    topology map
+visual/js/terminal.js  kernel shell, device consoles, simulated toolchain, MCP client, verify
+visual/js/phases.js    six phases, objectives, hints, debriefs
+visual/js/panels.js    system dashboards, key settings, inspector, verify board
+mcp_server/lab.py      LabStore (file-backed lab_state) + the 17 tool implementations
+mcp_server/server.py   FastMCP wiring, annotations, http bridge routes (/lab/health, /lab/state, /lab/reset)
+lab_state/seed.json    the one seed both sides load
 ```
 
-### MCP Tool Hierarchy (starter)
+### Why two implementations of the tools?
+The static site must work on Netlify with no backend, so the browser runs a JS copy of the
+tools. The real server runs the Python originals. `tests/test_parity.py` diffs 58 scripted
+calls across both, so they can't drift. With the bridge on, the browser stops using its
+copy and calls the Python server over real MCP JSON-RPC.
 
-```text
-lab/
-  topology.get
-  topology.add_node
-  topology.connect
-  device.list
-  device.inspect
-  device.run_command
+### Tool names
+Dotted names (`integrations.meraki.get_devices`) are kept exactly as specified. The MCP
+spec allows `.` in tool names. Some LLM APIs only accept `[A-Za-z0-9_-]`, and most MCP
+hosts normalise names before handing them to a model. If a host rejects the dots, map
+`.` → `_` in that host's config. The server names stay the same.
 
-integrations/
-  email.list / email.send
-  meraki.get_networks / meraki.get_devices / meraki.update_config
-  monitoring.get_alerts / monitoring.get_metrics
-  salesforce.query / salesforce.create_case
-  ipam.get_subnets / ipam.allocate
-```
+## Icons
+`scripts/make_icons.py` builds `assets/icons/*.png`:
+- `pc`, `switch` (10BASE-T hub), `server` are cut from the pixel-art renders in
+  `assets/icons/source/` (background flood-filled to alpha)
+- `router`, `firewall`, `cloud` had no source art in the repo, so they are drawn pixel
+  by pixel in the same beige Win98 palette
 
-## Terminal Console (Kernel)
-
-Available in the bottom console of the skeleton:
-
-- `help` / `?` / `help?` — command list
-- `packages` / `pkg` — simulated package list (ansible, netmiko, napalm, pysnmp, requests, rich, …)
-- `ansible-galaxy` — latest-style Galaxy info + example install lines
-- `nodes` — list current topology
-- `clear` / `version`
-
-All major packages are treated as available in the simulated kernel. Ready to wire to a real backend.
-
-## Visual POC
-
-Single-file skeleton: `visual/index.html`
-
-- Dark radial background + subtle grid (Hackers-adjacent)
-- Draggable nodes (PC, Switch, Router, Server) with neon outlines
-- Edges between nodes
-- Double-click to inspect
-- Terminal console at the bottom with the commands above
-
-Classic Win95/98-style icons can be dropped in later; placeholders are in place.
-
-## Deployment
-
-Netlify (static):
-
-1. Point Netlify at the `v1-skeleton` folder (or the `visual` subfolder)
-2. Publish directory: `.` or `visual`
-3. No build step required for the current skeleton
-4. Optional: add `_redirects` or `netlify.toml` later for clean routes
-
-## CLIDK Comparison (what we observed)
-
-From the Free Play Sandbox on clidk.com:
-
-- Visual topology builder (palette + drag-to-place + drag-to-cable)
-- Per-device CLI tabs
-- `?` help, TAB completion, configure terminal
-- Free-play or graded modes
-- All in-browser, no install
-
-Our V1 keeps the visual + terminal split but adds:
-- Classic icon aesthetic
-- MCP execution layer against simulated external systems
-- Explicit “user builds every piece” flow
-- Kernel-style package availability (including ansible-galaxy)
-
-## Next Slices (pick one)
-
-1. Real classic icon loading (drop PNG/ICO assets into canvas)
-2. Minimal Python MCP server with the tool groups above
-3. One full simulated integration (e.g. Meraki or monitoring) end-to-end
-4. Guided walkthrough steps for “build your first topology”
-5. Netlify deploy config + basic CI
-
-## Files in this skeleton
-
-- `visual/index.html` — interactive POC
-- `README.md` — short pointer
-- `BUILD.md` — this file
-
-Open `visual/index.html` in a browser to try the canvas + terminal.
+## Deployment (not performed)
+Netlify, static: publish `.`, `/` → `/visual/`, no build, no functions. The Python MCP
+server is not deployable as a Netlify Function as far as current community answers show
+(JS/TS/Go only). Re-check at ship time; see `guides/06-ship.md`.
