@@ -58,6 +58,9 @@ python scripts/check_no_keys.py                           # secret scan of track
 - `tests/test_parity.py` runs 58 scripted calls through the Python tools and the browser
   mirror (`visual/js/tools.js`, via Node) and diffs every result.
 
+CI (`.github/workflows/ci.yml`) runs the secret scan, a JS syntax check and both test
+files on every push to `main` and every pull request.
+
 ## Layout
 ```text
 visual/            game: index.html, css/, js/ (tools, state, canvas, terminal, phases, panels, app)
