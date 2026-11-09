@@ -1,0 +1,41 @@
+# Runs on every push and pull request. No secrets, no deploys, no network
+# calls to real services: it installs the server's deps and runs the tests.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: mcp_server/requirements.txt
+
+      # Node runs the browser's JS copy of the tools for the parity test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install server dependencies
+        run: pip install -r mcp_server/requirements.txt
+
+      - name: Secret scan (fails if anything key-shaped is tracked)
+        run: python scripts/check_no_keys.py
+
+      - name: Check JS syntax
+        run: for f in visual/js/*.js tests/*.js; do node --check "$f"; done
+
+      - name: Tests (MCP protocol + JS/Python parity)
+        run: python -m unittest discover -s tests -v

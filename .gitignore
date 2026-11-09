@@ -1,0 +1,17 @@
+# --- secrets: never commit keys (even FAKE lab keys) ---
+.env
+.env.*
+!.env.example
+
+# --- python ---
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# --- runtime lab state (seed.json is the tracked source of truth) ---
+lab_state/state.json
+lab_state/.state-*.json
+
+# --- local tooling ---
+.claude/settings.local.json
