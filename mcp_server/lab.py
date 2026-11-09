@@ -485,7 +485,7 @@ class Lab:
                          f"Success rate is {'100 percent (5/5)' if ok else '0 percent (0/5)'}"]
                 if ok:
                     lines.append("path: " + " -> ".join(hops))
-                self._verify("ping", ok, f"{n['label']} -> {target['label']}: " + (" -> ".join(hops) if ok else "no path"))
+                self._verify("ping", ok, f"{n['label']} -> {target['label']}: " + (f"5/5 replies, {len(hops) - 1} hop(s)" if ok else "0/5, no path"))
             else:
                 lines = [f"traceroute to {target['label']}"] + (
                     [f" {i + 1}  {h}  {1 + i * 2} ms" for i, h in enumerate(hops[1:])] if ok else [" 1  * * *"])

@@ -365,7 +365,7 @@
             ok ? '!!!!!' : '.....',
             `Success rate is ${ok ? '100 percent (5/5)' : '0 percent (0/5)'}`];
           if (ok) lines.push('path: ' + hops.join(' -> '));
-          this._verify('ping', ok, `${n.label} -> ${target.label}: ` + (ok ? hops.join(' -> ') : 'no path'));
+          this._verify('ping', ok, `${n.label} -> ${target.label}: ` + (ok ? `5/5 replies, ${hops.length - 1} hop(s)` : '0/5, no path'));
         } else {
           lines = [`traceroute to ${target.label}`].concat(ok ? hops.slice(1).map((h, i) => ` ${i + 1}  ${h}  ${1 + i * 2} ms`) : [' 1  * * *']);
         }

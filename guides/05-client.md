@@ -15,6 +15,13 @@ keys server-side.
    - `ask "open a case for the dockside outage"` → `y` (or `verify case`)
    - `ask "allocate an ip for the label printer"` → `y` (or `verify allocate`)
    - `verify config CORE-SW` runs `meraki.update_config`, then `device.inspect` (the vlan changes on the map)
+4. `ask "email dispatch an update"` → read the preview → `y`. The model picks
+   `integrations.email.send`; the sent message appears in **SYSTEMS › Email**. That makes
+   one write against every one of the five systems, each approved by you.
+
+Tip: tapping a device on the map opens its console tab. Kernel commands typed there
+(`ask`, `verify`, `client` …) are routed to the kernel tab with a note, so you never get
+stuck in a device prompt.
 
 ## Do it for real
 ```bash

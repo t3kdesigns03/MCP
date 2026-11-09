@@ -106,7 +106,7 @@
       n: 5, id: 'client', name: 'CLIENT', goal: 'Connect a client, ask a real question, verify everything',
       carried: 'From TOOLS: your topology, five attached systems, 17 tools on a running server, keys server-side.',
       brief: 'Be the app. Connect a client (initialize → tools/list), ask a real question, and watch the model pick a tool by name. The app executes it; the server calls the API with its key. Then run the five verification checks — each is a chain of real tool calls whose result shows pass/fail on the board.',
-      procedure: ['<code>client connect</code>', '<code>ask "which sites are down?"</code>', '<code>verify ping &lt;a&gt; &lt;b&gt;</code>, <code>verify alert &lt;dev&gt;</code>', '<code>ask "open a case for dockside"</code> → approve with <code>y</code> (or <code>verify case</code>)', '<code>verify allocate</code>, <code>verify config &lt;dev&gt;</code>'],
+      procedure: ['<code>client connect</code>', '<code>ask "which sites are down?"</code>', '<code>verify ping &lt;a&gt; &lt;b&gt;</code>, <code>verify alert &lt;dev&gt;</code>', '<code>ask "open a case for dockside"</code> → approve with <code>y</code> (or <code>verify case</code>)', '<code>verify allocate</code>, <code>verify config &lt;dev&gt;</code>', '<code>ask "email dispatch an update"</code> → <code>y</code>'],
       judgment: ['Count the tokens on connect — that cost is paid on every turn.', 'A write shows a preview first. Read it before you type y.', 'Turn on the bridge (menu) and the same commands hit the real Python server over real MCP.'],
       real: 'python mcp_server/client_demo.py          # real client, real stdio, real discovery\npython mcp_server/server.py --http         # then menu › Local server bridge › on',
       objs: [
@@ -117,6 +117,7 @@
         { id: 'p5e', t: 'Verify case creation', hint: 'ask "open a case for the dockside outage", y — or verify case', ok: () => vpass('case') },
         { id: 'p5f', t: 'Verify IP allocation', hint: 'ask "allocate an ip for the label printer", y — or verify allocate', ok: () => vpass('allocate') },
         { id: 'p5g', t: 'Verify a config push', hint: 'verify config <meraki device> — watch its vlan change on the map', ok: () => vpass('config') },
+        { id: 'p5h', t: 'Tell dispatch by email: <code>ask "email dispatch an update"</code> → <code>y</code>', hint: 'ask "email dispatch an update", read the preview, then y — the sent mail shows up in SYSTEMS › Email', ok: () => G().client.asked.some((x) => x.tool === 'integrations.email.send') && (L().integrations.email.messages || []).some((m) => m.folder === 'sent' && Number(String(m.id).replace(/\D/g, '')) > 1004) },
       ],
       debrief: () => `<p>The model saw ${G().client.count || 17} tools (≈${G().client.tokens || '?'} tokens), never a key. You asked ${G().client.asked.length} question(s); every write waited for your y. All five checks are green on the VERIFY board — and lab_state.verification says so too.</p>`,
     },

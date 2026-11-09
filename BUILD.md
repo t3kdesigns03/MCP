@@ -49,6 +49,8 @@ hosts normalise names before handing them to a model. If a host rejects the dots
   by pixel in the same beige Win98 palette
 
 ## Deployment (not performed)
-Netlify, static: publish `.`, `/` → `/visual/`, no build, no functions. The Python MCP
-server is not deployable as a Netlify Function as far as current community answers show
-(JS/TS/Go only). Re-check at ship time; see `guides/06-ship.md`.
+Netlify, static: publish `.`, `/` → `/visual/`, no build, no functions. Re-checked Nov 9,
+2026: Netlify's own guidance hosts a remote MCP server as a **TypeScript** Netlify Function
+(MCP SDK, Streamable HTTP, stateless); Python runs only at build time. So the Python server
+runs locally (stdio) first; a hosted endpoint means porting the tools to a TS function or a
+Python-capable host. Re-check at ship time; see `guides/06-ship.md`.

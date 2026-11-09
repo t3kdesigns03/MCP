@@ -11,15 +11,25 @@
 5. `git add .`, then `git commit -m "ship v1"`. The secret scan must pass.
 
 ## The MCP server runtime: check, don't assume
-Netlify hosts the **static** game. The MCP server is a **Python** process. When this was
-written (Nov 2026) we couldn't find current Netlify docs listing Python as a deployed
-Functions runtime. Community answers list JavaScript/TypeScript and Go, and say Python
-runs only during builds. **Re-check Netlify's runtime docs when you ship.** Until a
-supported route is confirmed:
-- run the server **locally over stdio** (what MCP desktop clients expect), or
-- host it on a platform with a real Python runtime, or
-- port the tools to a supported Functions language.
+Netlify hosts the **static** game. The MCP server is a **Python** process.
 
+What we found when this was re-checked (Nov 9, 2026):
+- Netlify's own MCP-server guidance builds a remote MCP server as **one Netlify Function in
+  TypeScript** (`@modelcontextprotocol/sdk`, Web-standard Streamable HTTP transport,
+  stateless, bearer auth, keys as secret env vars). Python is not offered as a Functions
+  runtime there.
+- Python on Netlify is a **build-time** language (configurable Python version in builds),
+  not a deployed request handler. Community threads about Python functions agree.
+
+So the supported routes, in order:
+1. Run `mcp_server/server.py` **locally over stdio** (what MCP desktop clients launch).
+2. If it must be remote and must stay on Netlify: **port the tools to a TypeScript Netlify
+   Function** at `/mcp` (the tool names and `lab_state` shape stay the same; state must move
+   to a durable store such as Netlify Blobs because function instances share no memory).
+3. Or host the Python server on a platform that really runs Python, and keep Netlify for the
+   static game.
+
+**Re-check Netlify's runtime docs on the day you ship.** Docs change.
 Never deploy a fake endpoint.
 
 ## Not done in V1 (by design)

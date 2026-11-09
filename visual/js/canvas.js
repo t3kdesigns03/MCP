@@ -169,7 +169,7 @@
       const args = { type };
       if (world) { args.x = Math.round(world.x); args.y = Math.round(world.y); }
       const r = A67.ui.canvasTool('lab.topology.add_node', args);
-      if (r && r.ok) { this.select(r.node.id); this.ensureVisible(r.node); }
+      if (r && r.ok) { this.select(r.node.id, true); this.ensureVisible(r.node); }
     },
 
     // ---------------------------------------------------------- pointer
@@ -283,10 +283,14 @@
       this.lastTap = { id: n.id, t: now };
       this.select(n.id);
     },
-    select(id) {
+    // quiet: highlight only. Placing a device should not yank the terminal into
+    // its console — only tapping/selecting a device on the map does that.
+    select(id, quiet) {
       if (this.selected === id) return;
       this.selected = id;
+      this.quietSelect = !!quiet;
       A67.emit('select', id);
+      this.quietSelect = false;
       this.redraw();
     },
 

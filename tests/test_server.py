@@ -139,6 +139,26 @@ class ServerTests(unittest.TestCase):
         finally:
             os.environ["MERAKI_API_KEY"] = saved
 
+    def test_06_every_tool_returns_structured_data(self):
+        """All 17 tools answer over MCP with a structured dict — no 'Unknown tool'."""
+        args = {
+            "lab.topology.add_node": {"type": "pc", "label": "PC-EVERY"},
+            "lab.topology.connect": {"a": "PC-EVERY", "b": "sw1"},
+            "lab.device.inspect": {"device_id": "sw1"},
+            "lab.device.run_command": {"device_id": "sw1", "command": "show version"},
+            "integrations.email.send": {"to": "noc@neonharbor.example", "subject": "every", "body": "x"},
+            "integrations.meraki.update_config": {"serial": "Q2FK-LAB-SW1", "changes": {"access_vlan": 20}},
+            "integrations.salesforce.query": {"soql": "SELECT CaseNumber FROM Case"},
+            "integrations.salesforce.create_case": {"subject": "every"},
+            "integrations.ipam.allocate": {"subnet": "sn-hq-users", "hostname": "every"},
+        }
+        for name in TOOL_NAMES:
+            with self.subTest(tool=name):
+                r = run(call(name, args.get(name, {})))
+                self.assertIsInstance(r, dict)
+                self.assertNotIn("unknown", json.dumps(r).lower()[:200])
+                self.assertTrue(r.get("ok") or r.get("status") == "confirmation_required", r)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

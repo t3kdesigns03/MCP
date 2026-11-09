@@ -158,6 +158,18 @@
   }
 
   // ----------------------------------------------------------- the terminal
+  // Top-level kernel commands (TAB completion + device-console passthrough).
+  const KERNEL_TOP = ['help', 'clear', 'history', 'ls', 'cat', 'pwd', 'echo', 'export', 'unset', 'env', 'printenv', 'whoami', 'version',
+    'nodes', 'devices', 'place', 'cable', 'attach', 'detach', 'inspect', 'console', 'remove', 'systems', 'keys',
+    'python', 'python3', 'py', 'pip', 'pip3', 'packages', 'pkg', 'source', '.venv\\Scripts\\activate', 'deactivate', 'which', 'where',
+    'mcp', 'fastmcp', 'scaffold', 'tool', 'tools', 'client', 'ask', 'apps', 'wire', 'quiz', 'answer', 'discover',
+    'verify', 'git', 'netlify', 'ansible-galaxy', 'ansible', 'hint', 'phase', 'freeplay', 'bridge', 'reset'];
+  // Words a device console owns itself; everything else in KERNEL_TOP typed in a
+  // device tab is routed to the kernel tab (with a note) instead of a dead-end error.
+  const DEVICE_WORDS = new Set(['help', '?', 'enable', 'show', 'sh', 'ping', 'traceroute', 'configure', 'conf', 'write', 'wr', 'copy',
+    'disable', 'end', 'exit', 'logout', 'do', 'hostname', 'interface', 'int', 'ip', 'shutdown', 'shut', 'no', 'switchport', 'description']);
+  const kernelOnly = (w0) => !DEVICE_WORDS.has(w0) && (KERNEL_TOP.includes(w0) || /^\.venv[\\/]/i.test(w0) || /^[A-Z_][A-Z0-9_]*=/.test(w0) || ['cls', 'dir', 'type', 'set', 'clear', 'obj', 'objectives'].includes(w0));
+
   const T = (A67.term = {
     out: null, input: null, promptEl: null,
     tabs: [{ id: 'kernel' }], active: 'kernel', dev: {}, hist: [], hIdx: 0,
@@ -174,7 +186,7 @@
       document.getElementById('btn-tab').addEventListener('click', () => { this.complete(); this.input.focus(); });
       document.getElementById('btn-hist').addEventListener('click', () => { this.histMove(-1); this.input.focus(); });
       this.out.addEventListener('click', () => { if (!window.getSelection().toString()) this.input.focus({ preventScroll: true }); });
-      A67.on('select', (id) => { if (id) this.openDevice(id, true); });
+      A67.on('select', (id) => { if (id && !A67.canvas.quietSelect) this.openDevice(id, true); });
       A67.on('lab', () => this.renderTabs());
       this.renderTabs();
       this.setPrompt();
@@ -309,7 +321,16 @@
       if (this.mode === 'python') await this.python(trimmed);
       else if (this.mode === 'confirm') await this.confirm(trimmed);
       else if (this.mode === 'accept') this.accept(trimmed);
-      else if (this.active !== 'kernel') this.device(trimmed);
+      else if (this.active !== 'kernel') {
+        const w0 = trimmed.split(/\s+/)[0];
+        const dn = this.devNode();
+        if (dn && !DEVICE_WORDS.has(w0.toLowerCase()) && (kernelOnly(w0) || kernelOnly(w0.toLowerCase()))) {
+          this.print(`(${w0} is a kernel command, not a ${dn.label} command — ran it in the kernel tab. Tap ${dn.label}'s tab to go back.)`, 'dim');
+          this.active = 'kernel';
+          this.renderTabs();
+          await this.kernel(trimmed);
+        } else this.device(trimmed);
+      }
       else await this.kernel(trimmed);
       this.setPrompt();
       store().saveGame();
@@ -341,11 +362,7 @@
     },
     kernelCands(before) {
       const nodes = store().lab.nodes.flatMap((n) => [n.id, n.label]);
-      const top = ['help', 'clear', 'history', 'ls', 'cat', 'pwd', 'echo', 'export', 'unset', 'env', 'printenv', 'whoami', 'version',
-        'nodes', 'devices', 'place', 'cable', 'attach', 'detach', 'inspect', 'console', 'remove', 'systems', 'keys',
-        'python', 'python3', 'py', 'pip', 'pip3', 'packages', 'pkg', 'source', '.venv\\Scripts\\activate', 'deactivate', 'which', 'where',
-        'mcp', 'fastmcp', 'scaffold', 'tool', 'tools', 'client', 'ask', 'apps', 'wire', 'quiz', 'answer', 'discover',
-        'verify', 'git', 'netlify', 'ansible-galaxy', 'ansible', 'hint', 'phase', 'freeplay', 'bridge', 'reset'];
+      const top = KERNEL_TOP;
       if (!before.length) return top;
       const c0 = before[0];
       const sub = {
@@ -531,7 +548,11 @@
       for (const [k, v] of Object.entries(all)) this.print(`${k}=${k.endsWith('_KEY') ? maskKey(v) : v}`);
       if (Object.keys(SH().env).some((k) => k.endsWith('_KEY'))) SH().flags.sawMaskedEnv = true;
       const dot = store().dotenv();
-      if (Object.keys(dot).length) { this.print(`# + ${Object.keys(dot).length} value(s) the server will load from .env (masked)`, 'dim'); SH().flags.sawMaskedEnv = true; }
+      if (Object.keys(dot).length) {
+        this.print(`# from .env — loaded by the MCP server, masked here (the model and client never see these):`, 'dim');
+        for (const [k, v] of Object.entries(dot)) this.print(`${k}=${k.endsWith('_KEY') ? maskKey(v) : v}`);
+        SH().flags.sawMaskedEnv = true;
+      }
     },
     keys() {
       const st = store().keyStatus();
@@ -549,7 +570,7 @@
     place(a) {
       if (!a[0]) return this.print(`usage: place <${NODE_TYPES.join('|')}> [label]`, 'err');
       const r = this.toolLocal('lab.topology.add_node', { type: a[0], label: a[1] || null });
-      if (r.ok) { A67.canvas.ensureVisible(r.node); A67.canvas.select(r.node.id); }
+      if (r.ok) { A67.canvas.ensureVisible(r.node); A67.canvas.select(r.node.id, true); }
     },
     toolLocal(name, args) {
       const r = lab().call(name, args);
@@ -1131,14 +1152,16 @@
     },
 
     // ------------------------------------------------- verification
-    async verify(a) {
+    async verify(a, nested) {
       const [what, x, y] = a;
       const L = store().lab;
       const p = (t, c) => this.print(t, c);
       const run = async (tool, args) => { const r = await A67.exec(tool, args); A67.emit('tool', { name: tool, args, data: r.data, source: 'verify' }); p(`  → ${tool} ${JSON.stringify(args)}  ${r.data.ok ? '✓' : '✗ ' + (r.data.message || r.data.error)}`, r.data.ok ? 'dim' : 'err'); return r.data; };
       const badge = (k) => { const v = store().lab.verification[k] || {}; p(`[${(v.status || 'pending').toUpperCase()}] ${k}: ${v.detail || ''}`, v.status === 'pass' ? 'ok' : 'err'); };
       if (!what) { for (const k of ['ping', 'alert', 'case', 'allocate', 'config']) badge(k); return; }
-      p('(verification runs its tool calls with confirm=true — you asked for them by typing verify)', 'dim');
+      if (!nested) p('(verification runs its tool calls with confirm=true — you asked for them by typing verify)', 'dim');
+      const unknown = [x, y].find((q) => q && ['ping', 'alert', 'config'].includes(what) && !lab()._node(q));
+      if (unknown) return p(`verify ${what}: no device '${unknown}' on the map — type nodes to list them`, 'err');
       if (what === 'ping') {
         const A = lab()._node(x) || L.nodes[0], B = lab()._node(y) || L.nodes.find((n) => A && n.id !== A.id && lab()._path(A.id, n.id)) || L.nodes[1];
         if (!A || !B) return p('need two devices on the map first', 'err');
@@ -1187,7 +1210,7 @@
         return badge('config');
       }
       if (what === 'all') {
-        for (const k of ['ping', 'alert', 'case', 'allocate', 'config']) await this.verify([k]);
+        for (const k of ['ping', 'alert', 'case', 'allocate', 'config']) await this.verify([k], true);
         const v = store().lab.verification;
         const pass = ['ping', 'alert', 'case', 'allocate', 'config'].every((k) => v[k] && v[k].status === 'pass');
         G().ship.verifiedAll = pass;
@@ -1355,7 +1378,7 @@
         if (ab(w[0], 'write') || w[0] === 'wr' || (w[0] === 'copy' && w[1] === 'run')) { p('Building configuration...\n[OK]', 'ok'); return; }
         if (ab(w[0], 'disable')) { d.mode = 'user'; return; }
         if (w[0] === 'end') return;
-        if (w[0] === 'exit') { d.mode = 'user'; return; }
+        if (w[0] === 'exit' || w[0] === 'logout') { d.mode = 'user'; this.closeDevice(n.id); return; }
         if (exec(w, argv)) return;
         return p(`% Invalid input detected at '^' marker: '${line}'`, 'err');
       }
